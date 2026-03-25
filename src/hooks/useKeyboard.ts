@@ -151,7 +151,7 @@ export const useKeyboard = () => {
                   useGameState.setState({
                     mode: 'ambiguity_q_c',
                     ambiguityFoundIdx: fi,
-                    ambiguityDests: entry,
+                    ambiguityDests: entry as unknown as QAmbiguityEntry[],
                     highlights: entry.tds.map(c => ({ type: 'tableau' as const, col: c })),
                   });
                 }
@@ -161,7 +161,7 @@ export const useKeyboard = () => {
           
           // Ambiguity Q_C mode - select tableau column destination
           else if (mode === 'ambiguity_q_c') {
-            const entry = state.ambiguityDests as { fi: number; card: any; tds: number[] };
+            const entry = state.ambiguityDests as unknown as QAmbiguityEntry;
             const fi = state.ambiguityFoundIdx;
             
             // Column keys (UIOP/JKL)
