@@ -18,8 +18,19 @@ export const GameBoard: React.FC = () => {
   
   const [isShuffling, setIsShuffling] = useState(false);
   const [wasteCardKey, setWasteCardKey] = useState(0);
+  const [, setTimerTick] = useState(0);
   const prevStockLengthRef = useRef(stock.length);
   const prevWasteLengthRef = useRef(waste.length);
+  
+  // Timer update interval - force re-render every second to update timer display
+  useEffect(() => {
+    if (!stats.currentGameFrozenTime) {
+      const interval = setInterval(() => {
+        setTimerTick(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [stats.currentGameFrozenTime]);
   
   // Detect recycle (stock length increases from 0)
   useEffect(() => {
