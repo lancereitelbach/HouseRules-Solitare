@@ -279,9 +279,11 @@ function layout(){
   const mobile = W<580;
   const railW  = mobile ? 8 : Math.max(14, W*0.014);
   const pad    = railW + (mobile ? 8 : Math.max(12, W*0.014));
-  // Fixed gap — cards grow to fill remaining space rather than gap expanding
-  const gap    = mobile ? 6 : 14;
-  const cardW  = Math.max(Math.floor((W - pad*2 - gap*6) / 7), mobile?38:56);
+  const gap    = mobile ? 6 : Math.max(10, Math.min(20, W*0.012));
+  const cardWbyWidth  = Math.floor((W - pad*2 - gap*6) / 7);
+  const cardHbyHeight = Math.floor((H - pad*3.4 - 50) / 3.89);
+  const cardWbyHeight = Math.floor(cardHbyHeight / 1.42);
+  const cardW  = Math.max(Math.min(cardWbyWidth, cardWbyHeight), mobile?38:56);
   const cardH  = Math.round(cardW*1.42);
   const topY   = pad;
   const tabY   = topY + cardH + pad*2.4;
@@ -290,7 +292,6 @@ function layout(){
   CARD_R = Math.max(8, Math.min(18, cardW*0.13));
   return {W,H,pad,cardW,cardH,gap,topY,tabY,fdOvlp,fuOvlp,railW};
 }
-
 const lx = {
   col:  (c)=>{ const {pad,cardW,gap}=layout(); return pad+c*(cardW+gap); },
   stock:()  => layout().pad,
