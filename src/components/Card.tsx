@@ -41,9 +41,9 @@ export const Card: React.FC<CardProps> = ({
   // Spring physics animation config
   const springConfig = {
     type: "spring" as const,
-    damping: 25,
-    stiffness: 200,
-    delay: dealIndex !== undefined ? dealIndex * 0.06 : 0, // 60ms stagger
+    damping: 18,
+    stiffness: 300,
+    delay: dealIndex !== undefined ? dealIndex * 0.04 : 0, // 60ms stagger
   };
 
   if (!card.faceUp) {

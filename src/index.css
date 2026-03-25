@@ -21,38 +21,39 @@
   --color-card-red: #b83a3a;
   --color-card-black: #2b2822;
   
-  /* Fonts */
-  --font-serif: 'Noto Serif JP', 'Source Serif Pro', serif;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
-  
-  /* Spacing */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 3rem;
-  --spacing-xl: 6rem;
+  /* Font families */
+  --font-family-serif: 'Noto Serif JP', 'Source Serif Pro', serif;
+  --font-family-sans: 'Inter', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Geist Mono', monospace;
 }
 
-/* Custom CSS variables for card rendering */
 :root {
   --card-red: #b83a3a;
   --card-black: #2b2822;
 }
 
-/* Cursor ring styles */
 .cursor-ring {
-  @apply ring-2 ring-paper-100 ring-offset-2 ring-offset-felt-base;
+  box-shadow: 0 0 0 2px rgb(248 247 244), 0 0 0 4px rgb(61 79 58);
 }
 
-/* Letter spacing utilities */
 .tracking-ui {
   letter-spacing: 0.05em;
 }
 
-/* Base styles */
-@layer base {
-  body {
-    @apply bg-felt-base text-paper-100 font-mono;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: #3d4f3a;
+  color: #f8f7f4;
 }

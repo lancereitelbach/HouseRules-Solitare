@@ -37,6 +37,7 @@ interface GameActions {
   autoPlace: (zone: 'waste' | 'tableau' | 'foundation', col: number) => void;
   reverseAutoPlace: () => void;
   sweep: () => void;
+  smartStackSelect: (col: number) => void;
   startAutocomplete: () => void;
   
   // Cursor movement
@@ -557,6 +558,65 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
     };
     
     autoStep();
+  },
+  
+  // Smart stack select - select longest valid descending sequence
+  smartStackSelect: (col) => {
+    const { tableau } = get();
+    const column = tableau[col];
+    
+    if (column.length === 0) {
+      get().audioCallbacks.error?.();
+      return;
+    }
+    
+    // Find the longest valid descending sequence from the bottom
+    let startRow = column.length - 1;
+    
+    // Walk backwards while cards form valid sequence
+    while (startRow > 0 && 
+           column[startRow - 1].faceUp && 
+           column[startRow - 1].rank === column[startRow].rank + 1 && 
+           column[startRow - 1].color !== column[startRow].color) {
+      startRow--;
+    }
+    
+    // Check if we found a valid card at startRow
+    if (startRow >= column.length || !column[startRow] || !column[startRow].faceUp) {
+      get().audioCallbacks.error?.();
+      return;
+    }
+    
+    const cards = column.slice(startRow);
+    
+    // Select the stack
+    set({
+      selection: {
+        zone: 'tableau',
+        col,
+        row: startRow,
+        cards,
+      },
+      mode: 'selected',
+      cursor: { zone: 'tableau', col, row: startRow },
+    });
+    
+    // Check if there's only one valid destination and highlight it
+    const bottom = cards[0];
+    const validDests: number[] = [];
+    
+    for (let c = 0; c < 7; c++) {
+      if (c === col) continue;
+      if (canPlaceOnTableau(bottom, tableau[c])) {
+        validDests.push(c);
+      }
+    }
+    
+    if (validDests.length > 0) {
+      set({
+        highlights: validDests.map(c => ({ type: 'tableau' as const, col: c })),
+      });
+    }
   },
   
   // Cursor movement

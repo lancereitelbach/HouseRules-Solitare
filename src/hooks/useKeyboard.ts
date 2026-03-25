@@ -18,6 +18,7 @@ export const useKeyboard = () => {
     autoPlace,
     reverseAutoPlace,
     sweep,
+    smartStackSelect,
     undo,
     goToStart,
     goToGame,
@@ -36,9 +37,14 @@ export const useKeyboard = () => {
       const key = e.key.toLowerCase();
       const shift = e.shiftKey;
 
-      // Help screen - any key dismisses
+      // Help screen - return to previous screen (game if playing, otherwise start)
       if (screen === 'help') {
-        setScreen('start');
+        // If there's an active game, return to it, otherwise go to start
+        const state = useGameState.getState();
+        const hasGame = state.tableau.some(col => col.length > 0) || 
+                       state.stock.length > 0 || 
+                       state.waste.length > 0;
+        setScreen(hasGame ? 'game' : 'start');
         return;
       }
 
@@ -273,7 +279,13 @@ export const useKeyboard = () => {
         // Column jump keys (U I O P J K L)
         if (key in COL_KEYS) {
           const col = COL_KEYS[key as keyof typeof COL_KEYS];
-          jumpToColumn(col);
+          
+          // Shift+Column = Smart stack select
+          if (shift) {
+            smartStackSelect(col);
+          } else {
+            jumpToColumn(col);
+          }
           return;
         }
 

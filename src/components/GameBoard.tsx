@@ -33,7 +33,7 @@ export const GameBoard: React.FC = () => {
   const cardHeight = 136;
   const gap = 16;
   const topPadding = 48;
-  const tableauTopMargin = 180;
+  const tableauTopMargin = 220;
   const statusBarHeight = 60; // Status bar at bottom
   const bottomPadding = 24;
 
