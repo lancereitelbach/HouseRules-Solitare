@@ -285,18 +285,21 @@ function layout(){
   const cardWbyHeight = Math.floor(cardHbyHeight / 1.42);
   const cardW  = Math.max(Math.min(cardWbyWidth, cardWbyHeight), mobile?38:56);
   const cardH  = Math.round(cardW*1.42);
+  // Center the entire table horizontally
+  const totalW = cardW*7 + gap*6;
+  const offsetX = Math.floor((W - totalW) / 2);
   const topY   = pad;
   const tabY   = topY + cardH + pad*2.4;
   const fdOvlp = Math.max(5, cardH*0.13);
   const fuOvlp = Math.max(14, cardH*0.27);
   CARD_R = Math.max(8, Math.min(18, cardW*0.13));
-  return {W,H,pad,cardW,cardH,gap,topY,tabY,fdOvlp,fuOvlp,railW};
+  return {W,H,pad,cardW,cardH,gap,topY,tabY,fdOvlp,fuOvlp,railW,offsetX};
 }
 const lx = {
-  col:  (c)=>{ const {pad,cardW,gap}=layout(); return pad+c*(cardW+gap); },
-  stock:()  => layout().pad,
-  waste:()  =>{ const {pad,cardW,gap}=layout(); return pad+(cardW+gap); },
-  found:(i) =>{ const {W,pad,cardW,gap}=layout(); return W-pad-(cardW*4+gap*3)+i*(cardW+gap); },
+  col:  (c)=>{ const {cardW,gap,offsetX}=layout(); return offsetX+c*(cardW+gap); },
+  stock:()  =>{ const {offsetX}=layout(); return offsetX; },
+  waste:()  =>{ const {cardW,gap,offsetX}=layout(); return offsetX+(cardW+gap); },
+  found:(i) =>{ const {cardW,gap,offsetX}=layout(); return offsetX+cardW*7+gap*6-(cardW*4+gap*3)+i*(cardW+gap); },
 };
 
 /* ════════════════════════════════════════════════════════
