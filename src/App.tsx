@@ -28,7 +28,18 @@ function App() {
       undo: audio.undo,
       win: audio.win,
     });
-  }, [audio, setAudioCallbacks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    audio.cardPlace,
+    audio.foundationPlace,
+    audio.acePlace,
+    audio.draw,
+    audio.recycle,
+    audio.error,
+    audio.undo,
+    audio.win,
+    setAudioCallbacks,
+  ]);
   
   // Initialize audio context on first user interaction
   useEffect(() => {
