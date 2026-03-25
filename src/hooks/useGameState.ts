@@ -366,7 +366,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
       const card = selection.cards[0];
       if (canPlaceOnTableau(card, tableau[cursor.col])) {
         get().saveHistory();
-        get().moveToTableau(selection.zone, selection.col, cursor.col, selection.cards);
+        get().moveToTableau(selection.zone as unknown as 'waste' | 'tableau' | 'foundation', selection.col, cursor.col, selection.cards);
         get().audioCallbacks.cardPlace?.();
       } else {
         get().audioCallbacks.error?.();
@@ -384,7 +384,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
       const card = selection.cards[0];
       if (canPlaceOnFoundation(card, foundations[cursor.col])) {
         get().saveHistory();
-        get().moveToFoundation(selection.zone, selection.col, cursor.col);
+        get().moveToFoundation(selection.zone as unknown as 'waste' | 'tableau' | 'foundation', selection.col, cursor.col);
         get().audioCallbacks.foundationPlace?.();
       } else {
         get().audioCallbacks.error?.();
@@ -457,7 +457,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
     // Prefer foundation if only one exists
     if (fds.length >= 1 && tds.length === 0) {
       get().saveHistory();
-      get().moveToFoundation(zone as 'waste' | 'tableau' | 'foundation', col, fds[0]);
+      get().moveToFoundation(zone as unknown as 'waste' | 'tableau' | 'foundation', col, fds[0]);
       get().audioCallbacks.foundationPlace?.();
       return;
     }
@@ -465,7 +465,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
     // If only one tableau destination
     if (fds.length === 0 && tds.length === 1) {
       get().saveHistory();
-      get().moveToTableau(zone as 'waste' | 'tableau' | 'foundation', col, tds[0]);
+      get().moveToTableau(zone as unknown as 'waste' | 'tableau' | 'foundation', col, tds[0]);
       get().audioCallbacks.cardPlace?.();
       return;
     }
