@@ -172,6 +172,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
         ...get().stats,
         currentGameMoves: 0,
         currentGameStartTime: Date.now(),
+        currentGameFrozenTime: null, // Reset frozen time for new game
       },
     });
     

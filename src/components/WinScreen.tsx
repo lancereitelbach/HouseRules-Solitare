@@ -33,18 +33,18 @@ export const WinScreen: React.FC = () => {
   useEffect(() => {
     const particles: ConfettiParticle[] = [];
     
-    // Create 40 confetti particles
-    for (let i = 0; i < 40; i++) {
+    // Create 50 confetti particles - burst from top center
+    for (let i = 0; i < 50; i++) {
       particles.push({
         id: i,
         color: Math.random() > 0.5 ? 'red' : 'black',
-        x: Math.random() * 100,
-        delay: Math.random() * 0.8,
-        duration: 2.5 + Math.random() * 2,
+        x: 50 + (Math.random() - 0.5) * 60, // Burst from center
+        delay: Math.random() * 0.4, // Tighter burst timing
+        duration: 4 + Math.random() * 3, // Slower fall (4-7 seconds)
         rotation: Math.random() * 720 - 360,
-        swayAmplitude: 20 + Math.random() * 40,
-        width: 8 + Math.random() * 8,
-        height: 12 + Math.random() * 16,
+        swayAmplitude: 15 + Math.random() * 25, // Less sway
+        width: 6 + Math.random() * 6,
+        height: 10 + Math.random() * 12,
       });
     }
     
@@ -88,21 +88,31 @@ export const WinScreen: React.FC = () => {
           transition={{ ...springConfig, delay: 0.3 }}
           className="flex justify-center mb-6"
         >
-          <div className="w-16 h-16 rounded-full border-2 border-accent-gold flex items-center justify-center bg-accent-gold bg-opacity-10">
-            <svg 
-              width="28" 
-              height="28" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-              className="text-accent-gold"
-            >
-              <circle cx="12" cy="8" r="6" />
-              <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-            </svg>
+          <div className="relative">
+            {/* Medal circle with gradient and shine */}
+            <div className="w-20 h-20 rounded-full border-4 border-accent-gold flex items-center justify-center bg-gradient-to-br from-accent-gold via-amber-600 to-yellow-700 shadow-xl relative overflow-hidden">
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-transparent opacity-30" />
+              
+              {/* Star icon */}
+              <svg 
+                width="36" 
+                height="36" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+                className="text-paper-100 relative z-10"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </div>
+            
+            {/* Ribbon */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-12 flex gap-1">
+              <div className="w-3 bg-accent-crimson transform -rotate-12 origin-top shadow-md" 
+                   style={{ clipPath: 'polygon(0 0, 100% 0, 50% 100%, 0 90%)' }} />
+              <div className="w-3 bg-accent-crimson transform rotate-12 origin-top shadow-md" 
+                   style={{ clipPath: 'polygon(0 0, 100% 0, 100% 90%, 50% 100%)' }} />
+            </div>
           </div>
         </motion.div>
 
@@ -186,24 +196,29 @@ export const WinScreen: React.FC = () => {
       {confetti.map((particle) => (
         <motion.div
           key={particle.id}
-          initial={{ y: -50, opacity: 0, rotateZ: 0 }}
+          initial={{ y: -100, opacity: 0, rotateZ: 0 }}
           animate={{ 
-            y: window.innerHeight + 50,
-            x: [0, particle.swayAmplitude, -particle.swayAmplitude, 0],
-            opacity: [0, 1, 1, 1, 0.6, 0],
+            y: window.innerHeight + 100,
+            x: [0, particle.swayAmplitude, -particle.swayAmplitude, particle.swayAmplitude, 0],
+            opacity: [0, 1, 1, 1, 1, 0.8, 0],
             rotateZ: particle.rotation,
           }}
           transition={{
             delay: particle.delay,
             duration: particle.duration,
-            ease: "linear",
+            ease: "easeIn", // Gravity effect
             opacity: {
-              times: [0, 0.1, 0.3, 0.7, 0.9, 1],
+              times: [0, 0.05, 0.2, 0.5, 0.8, 0.95, 1],
+              ease: "easeOut",
             },
             x: {
-              duration: particle.duration * 0.7,
-              repeat: Infinity,
+              duration: particle.duration,
+              times: [0, 0.25, 0.5, 0.75, 1],
               ease: "easeInOut",
+            },
+            rotateZ: {
+              duration: particle.duration * 1.2,
+              ease: "linear",
             }
           }}
           className="absolute pointer-events-none rounded-sm"
