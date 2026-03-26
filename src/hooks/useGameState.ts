@@ -38,6 +38,7 @@ interface GameActions {
   reverseAutoPlace: () => void;
   sweep: () => void;
   smartStackSelect: (col: number) => void;
+  toggleSmartSelect: () => void;
   startAutocomplete: () => void;
   
   // Cursor movement
@@ -87,6 +88,8 @@ const initialState: Omit<GameState, keyof GameActions> = {
   drawCount: 1,
   ambiguityDests: null,
   ambiguityFoundIdx: null,
+  smartSelectOptions: null,
+  smartSelectIndex: 0,
   history: [],
   
   stats: {
@@ -262,8 +265,9 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
   },
   
   moveToTableau: (srcZone, srcCol, destCol, cards) => {
-    const { waste, tableau, foundations } = get();
+    const { waste, tableau, foundations, mode } = get();
     let moved: Card[];
+    const isSmartSelect = mode === 'smart_select' && cards && cards.length > 1;
     
     if (srcZone === 'waste') {
       moved = [waste.pop()!];
@@ -282,7 +286,20 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
       moved = [foundations[srcCol].pop()!];
     }
     
-    moved.forEach(c => c.faceUp = true);
+    // Add cascade animation keys for smart select multi-card moves
+    if (isSmartSelect) {
+      const cascadeKey = Date.now();
+      moved.forEach((c, idx) => {
+        c.faceUp = true;
+        c.cascadeKey = cascadeKey + idx; // Unique key for each card with offset
+      });
+    } else {
+      moved.forEach(c => {
+        c.faceUp = true;
+        delete c.cascadeKey; // Clear any existing cascade key
+      });
+    }
+    
     tableau[destCol].push(...moved);
     
     set({
@@ -290,6 +307,8 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
       selection: null,
       highlights: [],
       cursor: { zone: 'tableau', col: destCol, row: tableau[destCol].length - 1 },
+      smartSelectOptions: null,
+      smartSelectIndex: 0,
     });
     
     get().incrementMoves();
@@ -404,6 +423,8 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
     highlights: [],
     ambiguityDests: null,
     ambiguityFoundIdx: null,
+    smartSelectOptions: null,
+    smartSelectIndex: 0,
   }),
   
   // Auto operations
@@ -570,53 +591,102 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
       return;
     }
     
-    // Find the longest valid descending sequence from the bottom
-    let startRow = column.length - 1;
+    // Find all valid descending subsequences from the bottom
+    const validOptions: Array<{startRow: number; cards: Card[]; destinations: number[]}> = [];
     
-    // Walk backwards while cards form valid sequence
-    while (startRow > 0 && 
-           column[startRow - 1].faceUp && 
-           column[startRow - 1].rank === column[startRow].rank + 1 && 
-           column[startRow - 1].color !== column[startRow].color) {
-      startRow--;
+    // Start from the bottom and work upward
+    for (let startRow = column.length - 1; startRow >= 0; startRow--) {
+      const card = column[startRow];
+      
+      // Must be face-up
+      if (!card.faceUp) break;
+      
+      // Check if this position starts a valid descending sequence to the bottom
+      let isValidSequence = true;
+      for (let i = startRow; i < column.length - 1; i++) {
+        const current = column[i];
+        const next = column[i + 1];
+        if (current.rank !== next.rank + 1 || current.color === next.color) {
+          isValidSequence = false;
+          break;
+        }
+      }
+      
+      if (!isValidSequence) continue;
+      
+      // This is a valid sequence - check if it has any valid destinations
+      const cards = column.slice(startRow);
+      const bottom = cards[0];
+      const destinations: number[] = [];
+      
+      for (let c = 0; c < 7; c++) {
+        if (c === col) continue;
+        if (canPlaceOnTableau(bottom, tableau[c])) {
+          destinations.push(c);
+        }
+      }
+      
+      // Only include options that have at least one destination
+      if (destinations.length > 0) {
+        validOptions.push({ startRow, cards, destinations });
+      }
     }
     
-    // Check if we found a valid card at startRow
-    if (startRow >= column.length || !column[startRow] || !column[startRow].faceUp) {
+    // No valid options at all
+    if (validOptions.length === 0) {
       get().audioCallbacks.error?.();
       return;
     }
     
-    const cards = column.slice(startRow);
+    // Only one valid option - auto-move immediately
+    if (validOptions.length === 1) {
+      const option = validOptions[0];
+      get().moveToTableau('tableau', col, option.destinations[0], option.cards);
+      return;
+    }
     
-    // Select the stack
+    // Multiple valid options - enter Smart Selection Mode
+    // Start with the longest sequence (first in the array)
+    const firstOption = validOptions[0];
+    
     set({
+      mode: 'smart_select',
       selection: {
         zone: 'tableau',
         col,
-        row: startRow,
-        cards,
+        row: firstOption.startRow,
+        cards: firstOption.cards,
       },
-      mode: 'selected',
-      cursor: { zone: 'tableau', col, row: startRow },
+      cursor: { zone: 'tableau', col, row: firstOption.startRow },
+      highlights: firstOption.destinations.map(c => ({ type: 'tableau' as const, col: c })),
+      smartSelectOptions: validOptions,
+      smartSelectIndex: 0,
     });
+  },
+  
+  toggleSmartSelect: () => {
+    const { mode, smartSelectOptions, smartSelectIndex, selection } = get();
     
-    // Check if there's only one valid destination and highlight it
-    const bottom = cards[0];
-    const validDests: number[] = [];
-    
-    for (let c = 0; c < 7; c++) {
-      if (c === col) continue;
-      if (canPlaceOnTableau(bottom, tableau[c])) {
-        validDests.push(c);
-      }
+    // Only works in smart_select mode
+    if (mode !== 'smart_select' || !smartSelectOptions || !selection) {
+      return;
     }
     
-    if (validDests.length > 0) {
-      set({
-        highlights: validDests.map(c => ({ type: 'tableau' as const, col: c })),
-      });
-    }
+    // Move to next option (cycle back to 0 at end)
+    const nextIndex = (smartSelectIndex + 1) % smartSelectOptions.length;
+    const nextOption = smartSelectOptions[nextIndex];
+    
+    set({
+      selection: {
+        zone: 'tableau',
+        col: selection.col,
+        row: nextOption.startRow,
+        cards: nextOption.cards,
+      },
+      cursor: { zone: 'tableau', col: selection.col, row: nextOption.startRow },
+      highlights: nextOption.destinations.map(c => ({ type: 'tableau' as const, col: c })),
+      smartSelectIndex: nextIndex,
+    });
   },
   
   // Cursor movement

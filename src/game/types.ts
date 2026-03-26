@@ -4,6 +4,7 @@ export interface Card {
   rank: number; // 1-13 (Ace to King)
   color: 'red' | 'black';
   faceUp: boolean;
+  cascadeKey?: number; // For cascade animation tracking
 }
 
 // Game zones
@@ -35,6 +36,7 @@ export interface Highlight {
 export type GameMode = 
   | 'neutral' 
   | 'selected' 
+  | 'smart_select'      // Smart stack selection with toggle
   | 'ambiguity_a'       // A key ambiguity (multiple destinations)
   | 'ambiguity_q_f'     // Q key ambiguity (select foundation)
   | 'ambiguity_q_c';    // Q key ambiguity (select column)
@@ -97,6 +99,10 @@ export interface GameState {
   // Ambiguity resolution state
   ambiguityDests: AmbiguityDests | QAmbiguityEntry[] | null;
   ambiguityFoundIdx: number | null;
+  
+  // Smart selection state (for toggling through valid subsequences)
+  smartSelectOptions: Array<{startRow: number; cards: Card[]; destinations: number[]}> | null;
+  smartSelectIndex: number;
   
   // History for undo
   history: HistorySnapshot[];

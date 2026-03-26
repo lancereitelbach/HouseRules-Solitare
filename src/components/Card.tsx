@@ -38,13 +38,38 @@ export const Card: React.FC<CardProps> = ({
   const rankLabel = RANK_LABELS[card.rank] || card.rank.toString();
   const suitColor = card.color === 'red' ? 'text-card-red' : 'text-card-black';
 
-  // Spring physics animation config
-  const springConfig = {
-    type: "spring" as const,
-    damping: 18,
-    stiffness: 300,
-    delay: 0, // instant
-  };
+  // Determine which animation to use
+  let animationConfig;
+  
+  if (card.cascadeKey !== undefined) {
+    // Cascade animation for smart select multi-card moves
+    // Extract index from cascadeKey (cascadeKey = timestamp + index)
+    const baseKey = Math.floor(card.cascadeKey / 100) * 100;
+    const cascadeIndex = card.cascadeKey - baseKey;
+    
+    animationConfig = {
+      type: "spring" as const,
+      damping: 18,
+      stiffness: 280,
+      delay: cascadeIndex * 0.08, // 80ms stagger for cascade effect
+    };
+  } else if (dealIndex !== undefined) {
+    // Initial deal animation
+    animationConfig = {
+      type: "spring" as const,
+      damping: 18,
+      stiffness: 300,
+      delay: dealIndex * 0.04, // 40ms stagger
+    };
+  } else {
+    // Default spring config (no delay)
+    animationConfig = {
+      type: "spring" as const,
+      damping: 18,
+      stiffness: 300,
+      delay: 0,
+    };
+  }
 
   if (!card.faceUp) {
     // Card back - minimalist pattern
@@ -52,7 +77,7 @@ export const Card: React.FC<CardProps> = ({
       <motion.div
         initial={{ opacity: 0, y: -20, rotateZ: -2 }}
         animate={{ opacity: 1, y: 0, rotateZ: 0 }}
-        transition={springConfig}
+        transition={animationConfig}
         style={{ width, height }}
         className={`
           relative rounded-lg border border-paper-300
@@ -116,7 +141,7 @@ export const Card: React.FC<CardProps> = ({
         y: isSelected ? -8 : 0,
         rotateZ: 0 
       }}
-      transition={springConfig}
+      transition={animationConfig}
       whileHover={{ y: -4 }}
       style={{ width, height }}
       className={`

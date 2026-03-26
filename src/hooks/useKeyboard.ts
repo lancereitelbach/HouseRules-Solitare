@@ -19,6 +19,7 @@ export const useKeyboard = () => {
     reverseAutoPlace,
     sweep,
     smartStackSelect,
+    toggleSmartSelect,
     undo,
     goToStart,
     goToGame,
@@ -97,6 +98,43 @@ export const useKeyboard = () => {
 
       // Game screen
       if (screen === 'game') {
+        // Handle smart_select mode (Shift+column smart select with toggling)
+        if (mode === 'smart_select') {
+          // Cancel selection
+          if ((shift && key === ' ') || key === 'escape') {
+            clearSelection();
+            return;
+          }
+          
+          // Down arrow - toggle to next option
+          if (key === 'arrowdown' || key === 'd') {
+            toggleSmartSelect();
+            return;
+          }
+          
+          // Column keys - place on selected column
+          const state = useGameState.getState();
+          if (key in COL_KEYS) {
+            const col = COL_KEYS[key as keyof typeof COL_KEYS];
+            const { selection, smartSelectOptions, smartSelectIndex } = state;
+            
+            if (selection && smartSelectOptions && smartSelectOptions[smartSelectIndex]) {
+              const currentOption = smartSelectOptions[smartSelectIndex];
+              
+              // Check if this column is a valid destination
+              if (currentOption.destinations.includes(col)) {
+                const { saveHistory, moveToTableau, audioCallbacks } = state;
+                saveHistory();
+                moveToTableau('tableau', selection.col, col, selection.cards);
+                audioCallbacks.cardPlace?.();
+                clearSelection();
+              }
+            }
+          }
+          
+          return;
+        }
+        
         // Handle ambiguity modes (A key, Q key)
         if (mode === 'ambiguity_a' || mode === 'ambiguity_q_f' || mode === 'ambiguity_q_c') {
           // Cancel ambiguity
