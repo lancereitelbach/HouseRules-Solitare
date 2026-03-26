@@ -642,6 +642,7 @@ export const useGameState = create<GameState & GameActions>((set, get) => ({
     // Only one valid option - auto-move immediately
     if (validOptions.length === 1) {
       const option = validOptions[0];
+      get().saveHistory(); // Save history before auto-move
       get().moveToTableau('tableau', col, option.destinations[0], option.cards);
       return;
     }
